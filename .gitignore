@@ -1,0 +1,7 @@
+sensorsshowcase/android
+sensorsshowcase/build
+sensorsshowcase/doc
+sensorsshowcase/image
+
+# !CMakeLists.txt
+# !sensors.pro
