@@ -30,6 +30,11 @@ Item {
         property real vy: 0
         property real vz: 0
 
+        // Variables to store previous velocities
+        property real prevVx: 0
+        property real prevVy: 0
+        property real prevVz: 0
+
         // Variables to store positions
         property real posX: 0
         property real posY: 0
@@ -57,9 +62,9 @@ Item {
 
             // Calculate change in position (delta s) using the average velocity
             // 1/2 at^2 + vt
-            var dx = (0.5 * x * epochTime*epochTime) + (vx + prevx) * epochTime
-            var dy = (0.5 * y * epochTime*epochTime) + (vy + prevy) * epochTime
-            var dz = (0.5 * z * epochTime*epochTime) + (vz + prevz) * epochTime
+            var dx = (0.5 * x * epochTime*epochTime) + (vx + prevVx) * epochTime
+            var dy = (0.5 * y * epochTime*epochTime) + (vy + prevVy) * epochTime
+            var dz = (0.5 * z * epochTime*epochTime) + (vz + prevVz) * epochTime
 
             // Update position
             posX += dx
