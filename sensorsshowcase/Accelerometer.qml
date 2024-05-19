@@ -41,7 +41,7 @@ Item {
         property real posZ: 0
 
         active: true
-        dataRate: 10
+        dataRate: 100
 
         property real epochTime: 0.01
 
@@ -51,9 +51,9 @@ Item {
             z = (reading as AccelerometerReading).z
 
             // Calculate change in velocity (delta v)
-            var dvx = (x - prevX) * epochTime
-            var dvy = (y - prevY) * epochTime
-            var dvz = (z - prevZ) * epochTime
+            var dvx = (x) * epochTime
+            var dvy = (y) * epochTime
+            var dvz = (z) * epochTime
 
             // Update velocity
             vx += dvx
@@ -62,9 +62,9 @@ Item {
 
             // Calculate change in position (delta s) using the average velocity
             // 1/2 at^2 + vt
-            var dx = (0.5 * x * epochTime*epochTime) + (vx + prevVx) * epochTime
-            var dy = (0.5 * y * epochTime*epochTime) + (vy + prevVy) * epochTime
-            var dz = (0.5 * z * epochTime*epochTime) + (vz + prevVz) * epochTime
+            var dx = (0.5 * x * epochTime*epochTime) + (vx) * epochTime
+            var dy = (0.5 * y * epochTime*epochTime) + (vy) * epochTime
+            var dz = (0.5 * z * epochTime*epochTime) + (vz) * epochTime
 
             // Update position
             posX += dx
@@ -80,7 +80,8 @@ Item {
             prevVz = vz
 
             // Output the calculated position
-            console.log("Position (x, y, z):", posX, posY, posZ)
+            console.log("Acceleration(x, y, z):", x, y, z)
+            // console.log("Position (x, y, z):", posX, posY, posZ)
         }
     }
     //! [0]
