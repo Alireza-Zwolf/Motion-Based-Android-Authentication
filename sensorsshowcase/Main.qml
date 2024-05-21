@@ -5,7 +5,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-
+import Sensors 1.0
 ApplicationWindow {
     id: root
 
@@ -16,6 +16,9 @@ ApplicationWindow {
     height: 760
     visible: true
     title: "Sensors Showcase"
+    AccelerometerSensor {
+            id: accelerometerSensor
+        }
 
     header : ToolBar {
         RowLayout {

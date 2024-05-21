@@ -144,9 +144,9 @@ Item {
             // Output the calculated position
             // console.log("Acceleration(x, y, z):", x, y, z)
             // if (counter == 0){
-                console.log("Position (x, y, z):", posX, posY, posZ)
-                console.log("Acceleration(x, y, z):", x_est, y_est, z_est)
-                console.log("\n")
+                // console.log("Position (x, y, z):", posX, posY, posZ)
+                // console.log("Acceleration(x, y, z):", x_est, y_est, z_est)
+                // console.log("\n")
             // }
             counter += 1
         }

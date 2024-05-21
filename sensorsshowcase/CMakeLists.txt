@@ -42,10 +42,10 @@ qt_add_qml_module(sensorsshowcase
     QML_FILES
         "Main.qml"
         "Accelerometer.qml"
-
+        "Compass.qml"
         "Gyroscope.qml"
-
-
+        "Magnetometer.qml"
+        "Proximity.qml"
         "ProgressXYZBar.qml"
     RESOURCES
         "images/compass.svg"
@@ -53,6 +53,8 @@ qt_add_qml_module(sensorsshowcase
         "images/qt_logo.png"
     SOURCES
         sensorsupport.h
+        SOURCES accelerometersensor.h accelerometersensor.cpp
+        SOURCES gyroscopesensor.h gyroscopesensor.cpp
 )
 
 target_link_libraries(sensorsshowcase
