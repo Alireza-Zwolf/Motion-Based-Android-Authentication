@@ -1,16 +1,28 @@
-// Copyright (C) 2023 The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
+#include "accelerometersensor.h"
+#include "gyroscopesensor.h"
 
 int main(int argc, char *argv[])
 {
-    QGuiApplication app(argc,argv);
-    QGuiApplication::setOrganizationName("QtProject");
-    QGuiApplication::setApplicationName("Sensors Showcase");
+    QGuiApplication app(argc, argv);
+
+    qmlRegisterType<AccelerometerSensor>("Sensors", 1, 0, "AccelerometerSensor");
+    qmlRegisterType<GyroscopeSensor>("Sensors", 1, 0, "GyroscopeSensor");
+
+
+    AccelerometerSensor accelerometerSensor;
+    GyroscopeSensor gyroscopeSensor(&accelerometerSensor);
 
     QQmlApplicationEngine engine;
-    engine.loadFromModule("SensorShowcaseModule", "Main");
+
+    QObject::connect(&gyroscopeSensor, &GyroscopeSensor::rotationDetected, &accelerometerSensor, &AccelerometerSensor::addRotationData);
+
+    engine.rootContext()->setContextProperty("accelerometerSensor", &accelerometerSensor);
+    engine.rootContext()->setContextProperty("gyroscopeSensor", &gyroscopeSensor);
+
+    engine.loadFromModule("SensorShowcaseModule", "Main");;
     if (engine.rootObjects().isEmpty())
         return -1;
 
