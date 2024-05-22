@@ -2,10 +2,11 @@
 #include "accelerometersensor.h"
 #include <QDebug>
 #include <QtMath>
+#include <QElapsedTimer>
 
-const qreal DEFAULT_THRESHOLD = 10;  // Default threshold
-const int DEFAULT_WINDOW_SIZE = 5; // Default window size for moving average
-const int AVERAGE_WINDOW_SIZE = 3; // Number of results to average
+const qreal DEFAULT_THRESHOLD = 0;  // Default threshold
+const int DEFAULT_WINDOW_SIZE = 1; // Default window size for moving average
+const int AVERAGE_WINDOW_SIZE = 1; // Number of results to average
 
 GyroscopeSensor::GyroscopeSensor(AccelerometerSensor *accelerometer, QObject *parent)
     : QObject(parent),
@@ -24,10 +25,12 @@ GyroscopeSensor::GyroscopeSensor(AccelerometerSensor *accelerometer, QObject *pa
     accumulatedY(0.0),
     accumulatedZ(0.0),
     resultSum(0),
-    accelerometerSensor(accelerometer)
+    accelerometerSensor(accelerometer),
+    lastUpdateTime(0)
 {
     connect(m_sensor, &QGyroscope::readingChanged, this, &GyroscopeSensor::updateReading);
     m_sensor->start();
+    timer.start(); // Start the elapsed timer
 }
 
 GyroscopeSensor::~GyroscopeSensor()
@@ -58,7 +61,7 @@ void GyroscopeSensor::setDataRate(int rate)
     if (rate > 0) {
         int dataRateMicroseconds = 1000000 / rate;
         m_sensor->setDataRate(dataRateMicroseconds);
-        qDebug() << "Data rate set to" << rate << "Hz (" << dataRateMicroseconds << "microseconds)";
+        qDebug() << "Data rate set to" << rate << "Hz (" << dataRateMicroseconds << " microseconds)";
     } else {
         qDebug() << "Invalid data rate. Must be greater than 0.";
     }
@@ -72,6 +75,10 @@ void GyroscopeSensor::updateReading()
             calibrate(); // Calibrate on the first reading
         }
 
+        qint64 currentTime = timer.elapsed();
+        qreal timeInterval = (currentTime - lastUpdateTime) / 1000.0; // Convert to seconds
+        lastUpdateTime = currentTime;
+
         // Apply denoising
         applyDenoising();
 
@@ -80,10 +87,15 @@ void GyroscopeSensor::updateReading()
         qreal adjustedY = m_reading->y() - initialY;
         qreal adjustedZ = m_reading->z() - initialZ;
 
+        // Calculate angular changes
+        qreal angularChangeX = adjustedX * timeInterval;
+        qreal angularChangeY = adjustedY * timeInterval;
+        qreal angularChangeZ = adjustedZ * timeInterval;
+
         // Accumulate the angular changes
-        accumulatedX += adjustedX;
-        accumulatedY += adjustedY;
-        accumulatedZ += adjustedZ;
+        accumulatedX += angularChangeX;
+        accumulatedY += angularChangeY;
+        accumulatedZ += angularChangeZ;
 
         // Detect 90-degree rotations
         detectRotation(accumulatedX, accumulatedY, accumulatedZ);
@@ -121,12 +133,10 @@ void GyroscopeSensor::applyDenoising()
 
 void GyroscopeSensor::detectRotation(qreal adjustedX, qreal adjustedY, qreal adjustedZ)
 {
-
-    if (qFabs(adjustedZ) >= 80) {
+    if (qFabs(adjustedZ) >= 90) {
         addResultToQueue(adjustedZ > 0 ? 90 : -90);
         accumulatedZ = 0;
     }
-
 }
 
 void GyroscopeSensor::addResultToQueue(int result)
@@ -136,18 +146,14 @@ void GyroscopeSensor::addResultToQueue(int result)
 
     if (resultQueue.size() >= AVERAGE_WINDOW_SIZE) {
         int averageResult = resultSum / resultQueue.size();
-        if (averageResult == 90 || averageResult == -90){
+        if (averageResult == 90 || averageResult == -90) {
             qDebug() << "Final 90 Degree Detection Result ↩️" << averageResult;
-
-            // emit rotationDetected(averageResult);
             accelerometerSensor->addRotationData(averageResult);
         }
         resultQueue.clear();
-        resultSum=0;
+        resultSum = 0;
     }
-    // emit rotationDetected(averageResult);
 }
-
 
 void GyroscopeSensor::startCapturing() {
     capturing = true;

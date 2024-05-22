@@ -1,11 +1,8 @@
 #ifndef ACCELEROMETERSENSOR_H
 #define ACCELEROMETERSENSOR_H
 
-<<<<<<< HEAD
-=======
 #include "qjsonarray.h"
 #include "qjsonobject.h"
->>>>>>> 0e044446bf3d99f979576ddfab882cbba6682001
 #include <QObject>
 #include <QAccelerometer>
 #include <QAccelerometerReading>
@@ -23,14 +20,11 @@ public:
     void calibrate(); // Method to calibrate the sensor
     void setThreshold(qreal threshold); // Set the motion detection threshold
 
-<<<<<<< HEAD
-=======
     Q_INVOKABLE void startCapturing();
     Q_INVOKABLE void stopCapturing();
     void addRotationData(int degrees);
     Q_INVOKABLE void saveDataToJson(const QString &filename);
 
->>>>>>> 0e044446bf3d99f979576ddfab882cbba6682001
 signals:
     void positionChanged(qreal x, qreal y, qreal z);
 
@@ -65,11 +59,6 @@ private:
     qreal positionX; // Current position in X direction
     qreal positionY; // Current position in Y direction
     qreal positionZ; // Current position in Z direction
-<<<<<<< HEAD
-
-    QElapsedTimer lastUpdateTime; // Timer to measure elapsed time between updates
-    int zeroAccelCount; // Counter for consecutive zero accelerations
-=======
     qreal latestX; // Current position in X direction
     qreal latestY; // Current position in Y direction
     qreal latestZ; // Current position in Z direction
@@ -82,7 +71,6 @@ private:
     bool capturing;
     QJsonArray pathArray;
     QJsonObject currentPathSegment;
->>>>>>> 0e044446bf3d99f979576ddfab882cbba6682001
 };
 
 #endif // ACCELEROMETERSENSOR_H

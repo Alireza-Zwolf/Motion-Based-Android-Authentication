@@ -3,27 +3,26 @@
 
 #include <QObject>
 #include <QGyroscope>
-#include <QGyroscopeReading>
 #include <QQueue>
-#include <accelerometersensor.h>
+#include <QElapsedTimer>
+
+class AccelerometerSensor;
 
 class GyroscopeSensor : public QObject
 {
     Q_OBJECT
-
 public:
     explicit GyroscopeSensor(AccelerometerSensor *accelerometer, QObject *parent = nullptr);
     ~GyroscopeSensor();
 
     void calibrate();
-    void setThreshold(qreal threshold);
+    void setThreshold(qreal newThreshold);
     void setDataRate(int rate);
-
-    Q_INVOKABLE void startCapturing();
-    Q_INVOKABLE void stopCapturing();
+    Q_INVOKABLE  void startCapturing();
+    Q_INVOKABLE  void stopCapturing();
 
 signals:
-    void rotationDetected(int degrees);
+    void rotationDetected(int angle);
 
 private slots:
     void updateReading();
@@ -35,33 +34,19 @@ private:
 
     QGyroscope *m_sensor;
     QGyroscopeReading *m_reading;
-
-    qreal initialX;
-    qreal initialY;
-    qreal initialZ;
-
-    qreal threshold;
-
     bool isCalibrated;
-
-    QQueue<qreal> xQueue;
-    QQueue<qreal> yQueue;
-    QQueue<qreal> zQueue;
+    qreal initialX, initialY, initialZ;
+    qreal threshold;
     int windowSize;
-    qreal xSum;
-    qreal ySum;
-    qreal zSum;
-
-    qreal accumulatedX;
-    qreal accumulatedY;
-    qreal accumulatedZ;
-
-    QQueue<int> resultQueue;
+    qreal xSum, ySum, zSum;
+    qreal accumulatedX, accumulatedY, accumulatedZ;
     int resultSum;
-
-    bool capturing;
+    QQueue<qreal> xQueue, yQueue, zQueue;
+    QQueue<int> resultQueue;
     AccelerometerSensor *accelerometerSensor;
-
+    QElapsedTimer timer;
+    qint64 lastUpdateTime;
+    bool capturing;
 };
 
 #endif // GYROSCOPESENSOR_H

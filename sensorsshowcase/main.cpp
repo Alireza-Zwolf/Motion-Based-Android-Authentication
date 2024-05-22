@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
 
     AccelerometerSensor accelerometerSensor;
     GyroscopeSensor gyroscopeSensor(&accelerometerSensor);
-
+    gyroscopeSensor.setDataRate(100);
     QQmlApplicationEngine engine;
 
     QObject::connect(&gyroscopeSensor, &GyroscopeSensor::rotationDetected, &accelerometerSensor, &AccelerometerSensor::addRotationData);
