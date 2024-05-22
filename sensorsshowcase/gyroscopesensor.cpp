@@ -1,4 +1,5 @@
 #include "gyroscopesensor.h"
+#include "accelerometersensor.h"
 #include <QDebug>
 #include <QtMath>
 
@@ -6,7 +7,7 @@ const qreal DEFAULT_THRESHOLD = 10;  // Default threshold
 const int DEFAULT_WINDOW_SIZE = 5; // Default window size for moving average
 const int AVERAGE_WINDOW_SIZE = 3; // Number of results to average
 
-GyroscopeSensor::GyroscopeSensor(QObject *parent)
+GyroscopeSensor::GyroscopeSensor(AccelerometerSensor *accelerometer, QObject *parent)
     : QObject(parent),
     m_sensor(new QGyroscope(this)),
     m_reading(nullptr),
@@ -22,7 +23,8 @@ GyroscopeSensor::GyroscopeSensor(QObject *parent)
     accumulatedX(0.0),
     accumulatedY(0.0),
     accumulatedZ(0.0),
-    resultSum(0)
+    resultSum(0),
+    accelerometerSensor(accelerometer)
 {
     connect(m_sensor, &QGyroscope::readingChanged, this, &GyroscopeSensor::updateReading);
     m_sensor->start();
@@ -85,8 +87,6 @@ void GyroscopeSensor::updateReading()
 
         // Detect 90-degree rotations
         detectRotation(accumulatedX, accumulatedY, accumulatedZ);
-    } else {
-        qDebug() << "Reading is null!";
     }
 }
 
@@ -138,9 +138,21 @@ void GyroscopeSensor::addResultToQueue(int result)
         int averageResult = resultSum / resultQueue.size();
         if (averageResult == 90 || averageResult == -90){
             qDebug() << "Final 90 Degree Detection Result ↩️" << averageResult;
+
+            // emit rotationDetected(averageResult);
+            accelerometerSensor->addRotationData(averageResult);
         }
         resultQueue.clear();
         resultSum=0;
     }
     // emit rotationDetected(averageResult);
+}
+
+
+void GyroscopeSensor::startCapturing() {
+    capturing = true;
+}
+
+void GyroscopeSensor::stopCapturing() {
+    capturing = false;
 }

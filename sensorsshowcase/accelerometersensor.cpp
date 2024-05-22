@@ -1,10 +1,20 @@
 #include "accelerometersensor.h"
+#include "qstandardpaths.h"
 #include <QDebug>
 #include <QtMath>
+#include <QFile>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QDir>
 
-const qreal DEFAULT_THRESHOLD = 0.15;  // Default threshold
+
+
+const qreal DEFAULT_THRESHOLD = 0.4;  // Default threshold
 const int DEFAULT_WINDOW_SIZE = 3;    // Default window size for moving average
-const int ZERO_ACCEL_COUNT_LIMIT = 1; // Number of zero accelerations before velocity is reset
+const int ZERO_ACCEL_COUNT_LIMIT = 2; // Number of zero accelerations before velocity is reset
+const int ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA = 5; // Number of zero accelerations before velocity is reset
+const qreal POSITION_THRESHOLD = 0.1;
 
 AccelerometerSensor::AccelerometerSensor(QObject *parent)
     : QObject(parent),
@@ -25,7 +35,11 @@ AccelerometerSensor::AccelerometerSensor(QObject *parent)
     positionX(0.0),
     positionY(0.0),
     positionZ(0.0),
-    zeroAccelCount(0)
+    latestX(0.0),
+    latestY(0.0),
+    latestZ(0.0),
+    zeroAccelCount(0),
+    zeroAccelCountTemp(0)
 {
     connect(m_sensor, &QAccelerometer::readingChanged, this, &AccelerometerSensor::updateReading);
     lastUpdateTime.start();
@@ -58,7 +72,11 @@ void AccelerometerSensor::setThreshold(qreal newThreshold)
 void AccelerometerSensor::updateReading()
 {
     m_reading = m_sensor->reading();
+<<<<<<< HEAD
     if (m_reading) {
+=======
+    if (m_reading && capturing) {
+>>>>>>> 0e044446bf3d99f979576ddfab882cbba6682001
         if (!isCalibrated) {
             calibrate(); // Calibrate on the first reading
         }
@@ -73,14 +91,15 @@ void AccelerometerSensor::updateReading()
         qreal currentZ = m_reading->z();
 
         if (currentX == 0 && currentY == 0 && currentZ == 0) {
-            qDebug() << "Zero Acceleration Detected";
+            // qDebug() << "Zero Acceleration Detected";
             zeroAccelCount++;
+            zeroAccelCountTemp++;
         } else {
             zeroAccelCount = 0;
         }
 
         if (zeroAccelCount >= ZERO_ACCEL_COUNT_LIMIT) {
-            qDebug() << "Resetting Velocity after several measurements of zero acceleration";
+            // qDebug() << "Resetting Velocity after several measurements of zero acceleration";
             velocityX = 0;
             velocityY = 0;
             velocityZ = 0;
@@ -96,12 +115,72 @@ void AccelerometerSensor::updateReading()
         velocityY += currentY * deltaTime;
         velocityZ += currentZ * deltaTime;
 
+<<<<<<< HEAD
         emit positionChanged(positionX, positionY, positionZ);
 
         // Logging only significant changes
         qDebug() << "Cur X:" << positionX << "Cur Y:" << positionY << "Cur Z:" << positionZ;
     } else {
         qDebug() << "Reading is null!";
+=======
+        // emit positionChanged(positionX, positionY, positionZ);
+
+        // Logging only significant changes
+        // if(positionX > POSITION_THRESHOLD || positionY > POSITION_THRESHOLD || positionZ > POSITION_THRESHOLD)
+        //     qDebug() << "Cur X:" << positionX << "Cur Y:" << positionY << "Cur Z:" << positionZ;
+
+        // Logging the accelerations
+        // if (fabs(m_reading->x()) > DEFAULT_THRESHOLD){
+        //     qDebug() << "SignificantX: " << m_reading->x();
+        // }
+        // if (fabs(m_reading->y()) > DEFAULT_THRESHOLD){
+        //     qDebug() << "SignificantY: " << m_reading->y();
+        // }
+        // if (fabs(m_reading->z()) > DEFAULT_THRESHOLD){
+        //     qDebug() << "SignificantZ: " << m_reading->z();
+        // }
+
+
+        // Save the data to JSON
+        if (zeroAccelCountTemp > ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA){
+            QJsonObject segment;
+            segment["start"] = QJsonObject({{"x", latestX}, {"y", latestY}});
+            segment["end"] = QJsonObject({{"x", positionX}, {"y", positionY}});
+            qreal x_movement = fabs(positionX) - fabs(latestX);
+            qreal y_movement = fabs(positionY) - fabs(latestY);
+
+            // setting directions
+            if (y_movement >= x_movement){
+                if(positionY >= latestY)
+                    segment["direction"] = "top";
+                else
+                    segment["direction"] = "button";
+            }
+            else{
+                if(positionX >= latestX)
+                    segment["direction"] = "right";
+                else
+                    segment["direction"] = "left";
+            }
+
+
+            // Do not store any data if the device is motionless
+            if(latestX != positionX && latestY != positionY){
+                currentPathSegment = segment;
+                pathArray.append(currentPathSegment);
+                zeroAccelCountTemp = 0;
+
+                // Updating the Latest Position
+                latestX = positionX;
+                latestY = positionY;
+
+                qDebug() << "New movement added to the path.";
+            }
+        }
+        // Emit positionChanged signal
+        emit positionChanged(positionX, positionY, positionZ);
+
+>>>>>>> 0e044446bf3d99f979576ddfab882cbba6682001
     }
 }
 
@@ -136,4 +215,52 @@ void AccelerometerSensor::applyDenoising()
     m_reading->setX(xSum / xQueue.size());
     m_reading->setY(ySum / yQueue.size());
     m_reading->setZ(zSum / zQueue.size());
+}
+
+void AccelerometerSensor::startCapturing() {
+    capturing = true;
+    pathArray = QJsonArray();  // Initialize the JSON array
+    currentPathSegment = QJsonObject(); // Initialize current path segment
+    lastUpdateTime.start();
+}
+
+void AccelerometerSensor::stopCapturing() {
+    capturing = false;
+    // if (!currentPathSegment.isEmpty()) {
+    //     pathArray.append(currentPathSegment);
+    // }
+}
+
+void AccelerometerSensor::addRotationData(int degrees) {
+    if (capturing) {
+        currentPathSegment["start"] = QJsonObject({{"x", latestX}, {"y", latestY}});
+        currentPathSegment["end"] = QJsonObject({{"x", latestX}, {"y", latestY}});
+        currentPathSegment["direction"] = degrees > 0 ? "right" : "left";
+        currentPathSegment["angle"] = degrees;
+        pathArray.append(currentPathSegment);
+        qDebug() << "New rotation added to the path.";
+    }
+}
+
+void AccelerometerSensor::saveDataToJson(const QString &filename) {
+    QJsonObject rootObj;
+    rootObj["path"] = pathArray;
+    QJsonDocument doc(rootObj);
+
+    // QString filePath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation) + "/" + filename;
+
+    QString documentsPath = QStandardPaths::writableLocation(QStandardPaths::DocumentsLocation);
+    QString filePath = documentsPath + "/" + filename;
+
+    QFile file(filePath);
+    if (file.open(QIODevice::WriteOnly)) {
+        file.write(doc.toJson());
+        file.close();
+        qDebug() << "File saved to the json file.";
+        qDebug() << pathArray;
+    } else {
+        qWarning("Couldn't open save file.");
+    }
+    qDebug() << "Current working directory:" << QDir::currentPath();
+
 }

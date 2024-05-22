@@ -5,18 +5,22 @@
 #include <QGyroscope>
 #include <QGyroscopeReading>
 #include <QQueue>
+#include <accelerometersensor.h>
 
 class GyroscopeSensor : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit GyroscopeSensor(QObject *parent = nullptr);
+    explicit GyroscopeSensor(AccelerometerSensor *accelerometer, QObject *parent = nullptr);
     ~GyroscopeSensor();
 
     void calibrate();
     void setThreshold(qreal threshold);
     void setDataRate(int rate);
+
+    Q_INVOKABLE void startCapturing();
+    Q_INVOKABLE void stopCapturing();
 
 signals:
     void rotationDetected(int degrees);
@@ -54,6 +58,9 @@ private:
 
     QQueue<int> resultQueue;
     int resultSum;
+
+    bool capturing;
+    AccelerometerSensor *accelerometerSensor;
 
 };
 
