@@ -9,7 +9,7 @@ The system is powered by useful UI which makes it easy to use . Each time a user
 
 
 ## Table of Contents
-•  Features(#Features)
+•  [Features](#Features)
 
 •  [Installation](#installation)
 
