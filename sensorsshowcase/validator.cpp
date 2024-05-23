@@ -19,10 +19,14 @@ QJsonArray Validator::createCorrectSample()
     // QString right_agnel = -90;
     // Create a manual sample of the correct path
     // correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0}}), QJsonObject({{"x", -0.2}, {"y", 0}}), "left", 0));
-    correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0}}), QJsonObject({{"x", 0}, {"y", 0.2}}), "up", 0));
-    correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0.2}}), QJsonObject({{"x", 0}, {"y", 0.2}}), "right", -90));
-    correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0.2}}), QJsonObject({{"x", 0}, {"y", 0.2}}), "right", -90));
-    correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0.2}}), QJsonObject({{"x", -0.2}, {"y", 0.2}}), "left", 0));
+    correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0}}), QJsonObject({{"x", 0}, {"y", 0.0}}), "left", 90));
+    correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0}}), QJsonObject({{"x", 0}, {"y", 0.0}}), "left", 90));
+    correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0}}), QJsonObject({{"x", 0}, {"y", -20.0}}), "down", 0));
+    // correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", -20.0}}), QJsonObject({{"x", 20.0}, {"y", 0.0}}), "right", 90));
+    // correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0}}), QJsonObject({{"x", 0}, {"y", 0.0}}), "right", 90));
+    // correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0.2}}), QJsonObject({{"x", 0}, {"y", 0.2}}), "right", -90));
+    // correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0.2}}), QJsonObject({{"x", 0}, {"y", 0.2}}), "right", -90));
+    // correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0.2}}), QJsonObject({{"x", -0.2}, {"y", 0.2}}), "left", 0));
 
     // correctPath.append(createSegment(QJsonObject({{"x", -10}, {"y", 10}}), QJsonObject({{"x", 10}, {"y", 10}}), "right", "0"));
 

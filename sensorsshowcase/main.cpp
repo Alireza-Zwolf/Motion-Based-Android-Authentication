@@ -1,6 +1,8 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QtCharts/QChartView>
+#include <QtCharts/QLineSeries>
 #include "accelerometersensor.h"
 #include "gyroscopesensor.h"
 #include "validator.h"

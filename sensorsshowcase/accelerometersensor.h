@@ -8,6 +8,7 @@
 #include <QAccelerometerReading>
 #include <QQueue>
 #include <QElapsedTimer>
+#include <QVector>
 
 class AccelerometerSensor : public QObject
 {
@@ -17,16 +18,16 @@ public:
     explicit AccelerometerSensor(QObject *parent = nullptr);
     ~AccelerometerSensor();
 
-    void calibrate(); // Method to calibrate the sensor
     void setThreshold(qreal threshold); // Set the motion detection threshold
 
     Q_INVOKABLE void startCapturing();
     Q_INVOKABLE void stopCapturing();
+    Q_INVOKABLE void startCalibration(); // Start collecting data for calibration
+    Q_INVOKABLE void stopCalibration(); // Stop collecting data and apply calibration
     void addRotationData(int degrees);
     Q_INVOKABLE void saveDataToJson(const QString &filename);
-    QJsonArray getPathArray();
+    Q_INVOKABLE  QJsonArray getPathArray();
     void traverseAndCleanPathArray();
-
 
 signals:
     void positionChanged(qreal x, qreal y, qreal z);
@@ -36,6 +37,7 @@ private slots:
 
 private:
     void applyDenoising(); // Apply denoising to the current reading
+    void calculateMedianCalibration();
 
     QAccelerometer *m_sensor;
     QAccelerometerReading *m_reading;
@@ -62,18 +64,23 @@ private:
     qreal positionX; // Current position in X direction
     qreal positionY; // Current position in Y direction
     qreal positionZ; // Current position in Z direction
-    qreal latestX; // Current position in X direction
-    qreal latestY; // Current position in Y direction
-    qreal latestZ; // Current position in Z direction
+    qreal latestX; // Latest position in X direction
+    qreal latestY; // Latest position in Y direction
+    qreal latestZ; // Latest position in Z direction
 
     QElapsedTimer lastUpdateTime; // Timer to measure elapsed time between updates
     int zeroAccelCount; // Counter for consecutive zero accelerations
     int zeroAccelCountTemp; // Counter for consecutive zero accelerations for saving data into a .json file
 
-
     bool capturing;
     QJsonArray pathArray;
     QJsonObject currentPathSegment;
+
+    // Calibration variables
+    bool isCalibrating;
+    QVector<qreal> calibrationXValues;
+    QVector<qreal> calibrationYValues;
+    QVector<qreal> calibrationZValues;
 };
 
 #endif // ACCELEROMETERSENSOR_H

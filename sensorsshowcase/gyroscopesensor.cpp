@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QtMath>
 #include <QElapsedTimer>
+#include <algorithm>
 
 const qreal DEFAULT_THRESHOLD = 0;  // Default threshold
 const int DEFAULT_WINDOW_SIZE = 1; // Default window size for moving average
@@ -26,7 +27,8 @@ GyroscopeSensor::GyroscopeSensor(AccelerometerSensor *accelerometer, QObject *pa
     accumulatedZ(0.0),
     resultSum(0),
     accelerometerSensor(accelerometer),
-    lastUpdateTime(0)
+    lastUpdateTime(0),
+    isCalibrating(false)
 {
     connect(m_sensor, &QGyroscope::readingChanged, this, &GyroscopeSensor::updateReading);
     m_sensor->start();
@@ -36,19 +38,6 @@ GyroscopeSensor::GyroscopeSensor(AccelerometerSensor *accelerometer, QObject *pa
 GyroscopeSensor::~GyroscopeSensor()
 {
     m_sensor->stop();
-}
-
-void GyroscopeSensor::calibrate()
-{
-    if (m_reading) {
-        initialX = m_reading->x();
-        initialY = m_reading->y();
-        initialZ = m_reading->z();
-        isCalibrated = true;
-        qDebug() << "Calibration done - Initial X:" << initialX << " Y:" << initialY << " Z:" << initialZ;
-    } else {
-        qDebug() << "Reading is null, cannot calibrate!";
-    }
 }
 
 void GyroscopeSensor::setThreshold(qreal newThreshold)
@@ -71,8 +60,10 @@ void GyroscopeSensor::updateReading()
 {
     m_reading = m_sensor->reading();
     if (m_reading) {
-        if (!isCalibrated) {
-            calibrate(); // Calibrate on the first reading
+        if (isCalibrating) {
+            calibrationXValues.append(m_reading->x());
+            calibrationYValues.append(m_reading->y());
+            calibrationZValues.append(m_reading->z());
         }
 
         qint64 currentTime = timer.elapsed();
@@ -133,7 +124,7 @@ void GyroscopeSensor::applyDenoising()
 
 void GyroscopeSensor::detectRotation(qreal adjustedX, qreal adjustedY, qreal adjustedZ)
 {
-    if (qFabs(adjustedZ) >= 90) {
+    if (qFabs(adjustedZ) >= 85) {
         addResultToQueue(adjustedZ > 0 ? 90 : -90);
         accumulatedZ = 0;
     }
@@ -161,4 +152,45 @@ void GyroscopeSensor::startCapturing() {
 
 void GyroscopeSensor::stopCapturing() {
     capturing = false;
+}
+
+void GyroscopeSensor::startCalibration()
+{
+    isCalibrating = true;
+    calibrationXValues.clear();
+    calibrationYValues.clear();
+    calibrationZValues.clear();
+    qDebug() << "Calibration started.";
+}
+
+void GyroscopeSensor::stopCalibration()
+{
+    if (isCalibrating) {
+        calculateMedianCalibration();
+        isCalibrating = false;
+        isCalibrated = true;
+        qDebug() << "Calibration stopped and median values calculated.";
+    } else {
+        qDebug() << "Calibration was not running.";
+    }
+}
+
+void GyroscopeSensor::calculateMedianCalibration()
+{
+    if (calibrationXValues.size() == 0 || calibrationYValues.size() == 0 || calibrationZValues.size() == 0) {
+        qDebug() << "No data collected for calibration.";
+        return;
+    }
+
+    std::sort(calibrationXValues.begin(), calibrationXValues.end());
+    std::sort(calibrationYValues.begin(), calibrationYValues.end());
+    std::sort(calibrationZValues.begin(), calibrationZValues.end());
+
+    int midIndex = calibrationXValues.size() / 2;
+
+    initialX = calibrationXValues[midIndex];
+    initialY = calibrationYValues[midIndex];
+    initialZ = calibrationZValues[midIndex];
+
+    qDebug() << "Calibration done - Median X:" << initialX << " Y:" << initialY << " Z:" << initialZ;
 }

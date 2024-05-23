@@ -7,13 +7,13 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QDir>
+#include <algorithm>
 
-const qreal DEFAULT_THRESHOLD = 0.6;  // Adjusted threshold for better sensitivity
+const qreal DEFAULT_THRESHOLD = 0.3;  // Adjusted threshold for better sensitivity
 const int DEFAULT_WINDOW_SIZE = 3;    // Adjusted window size for better smoothing
 const int ZERO_ACCEL_COUNT_LIMIT = 2; // Increased limit for better accuracy in zero detection
-const int ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA = 8;
-// const qreal POSITION_THRESHOLD = 0.1; // Adjusted for better small movement detection
-const qreal RELOCATION_THRESHOLD = 0.1; // Adjusted for better small movement detection
+const int ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA = 3;
+const qreal RELOCATION_THRESHOLD = 0.2; // Adjusted for better small movement detection
 
 AccelerometerSensor::AccelerometerSensor(QObject *parent)
     : QObject(parent),
@@ -38,7 +38,8 @@ AccelerometerSensor::AccelerometerSensor(QObject *parent)
     latestY(0.0),
     latestZ(0.0),
     zeroAccelCount(0),
-    zeroAccelCountTemp(0)
+    zeroAccelCountTemp(0),
+    isCalibrating(false)
 {
     connect(m_sensor, &QAccelerometer::readingChanged, this, &AccelerometerSensor::updateReading);
     lastUpdateTime.start();
@@ -50,19 +51,6 @@ AccelerometerSensor::~AccelerometerSensor()
     m_sensor->stop();
 }
 
-void AccelerometerSensor::calibrate()
-{
-    if (m_reading) {
-        initialX = m_reading->x();
-        initialY = m_reading->y();
-        initialZ = m_reading->z();
-        isCalibrated = true;
-        qDebug() << "Calibration done - Initial X:" << initialX << " Y:" << initialY << " Z:" << initialZ;
-    } else {
-        qDebug() << "Reading is null, cannot calibrate!";
-    }
-}
-
 void AccelerometerSensor::setThreshold(qreal newThreshold)
 {
     threshold = newThreshold;
@@ -72,8 +60,10 @@ void AccelerometerSensor::updateReading()
 {
     m_reading = m_sensor->reading();
     if (m_reading && capturing) {
-        if (!isCalibrated) {
-            calibrate(); // Calibrate on the first reading
+        if (isCalibrating) {
+            calibrationXValues.append(m_reading->x());
+            calibrationYValues.append(m_reading->y());
+            calibrationZValues.append(m_reading->z());
         }
 
         qint64 currentTime = lastUpdateTime.elapsed();
@@ -98,27 +88,6 @@ void AccelerometerSensor::updateReading()
             velocityY = 0;
             velocityZ = 0;
         }
-        // if (velocityZ < min_v) {
-
-        //     velocityZ = 0;
-
-        // }
-        // if (velocityY < min_v) {
-
-        //     velocityY = 0;
-
-        // }
-        // if (velocityX < min_v) {
-        //     velocityX = 0;
-        // }
-
-        // positionX += velocityX * deltaTime + 0.5 * currentX * deltaTime * deltaTime;
-        // positionY += velocityY * deltaTime + 0.5 * currentY * deltaTime * deltaTime;
-        // positionZ += velocityZ * deltaTime + 0.5 * currentZ * deltaTime * deltaTime;
-
-        // velocityX += currentX * deltaTime;
-        // velocityY += currentY * deltaTime;
-        // velocityZ += currentZ * deltaTime;
 
         if (zeroAccelCountTemp >= ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA){
             positionX += velocityX * deltaTime + 0.5 * currentX * deltaTime * deltaTime;
@@ -263,4 +232,51 @@ void AccelerometerSensor::traverseAndCleanPathArray()
             --i; // Adjust index to account for removed element
         }
     }
+}
+
+void AccelerometerSensor::startCalibration()
+{
+    isCalibrating = true;
+    if (!capturing){
+        startCapturing();
+    }
+    calibrationXValues.clear();
+    calibrationYValues.clear();
+    calibrationZValues.clear();
+    qDebug() << "Calibration started.";
+}
+
+void AccelerometerSensor::stopCalibration()
+{
+    if (isCalibrating) {
+        calculateMedianCalibration();
+        if (capturing){
+        stopCapturing();
+        }
+        isCalibrating = false;
+        isCalibrated = true;
+        qDebug() << "Calibration stopped and median values calculated.";
+    } else {
+        qDebug() << "Calibration was not running.";
+    }
+}
+
+void AccelerometerSensor::calculateMedianCalibration()
+{
+    if (calibrationXValues.size() == 0 || calibrationYValues.size() == 0 || calibrationZValues.size() == 0) {
+        qDebug() << "No data collected for calibration.";
+        return;
+    }
+
+    std::sort(calibrationXValues.begin(), calibrationXValues.end());
+    std::sort(calibrationYValues.begin(), calibrationYValues.end());
+    std::sort(calibrationZValues.begin(), calibrationZValues.end());
+
+    int midIndex = calibrationXValues.size() / 2;
+
+    initialX = calibrationXValues[midIndex];
+    initialY = calibrationYValues[midIndex];
+    initialZ = calibrationZValues[midIndex];
+
+    qDebug() << "Calibration done - Median X:" << initialX << " Y:" << initialY << " Z:" << initialZ;
 }
