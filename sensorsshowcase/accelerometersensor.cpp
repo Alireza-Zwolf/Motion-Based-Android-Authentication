@@ -8,12 +8,12 @@
 #include <QJsonArray>
 #include <QDir>
 
-const qreal DEFAULT_THRESHOLD = 0.15;  // Adjusted threshold for better sensitivity
+const qreal DEFAULT_THRESHOLD = 0.6;  // Adjusted threshold for better sensitivity
 const int DEFAULT_WINDOW_SIZE = 3;    // Adjusted window size for better smoothing
 const int ZERO_ACCEL_COUNT_LIMIT = 2; // Increased limit for better accuracy in zero detection
-const int ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA = 3;
-const qreal POSITION_THRESHOLD = 0.10; // Adjusted for better small movement detection
-const qreal RELOCATION_THRESHOLD = 0.15; // Adjusted for better movement detection
+const int ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA = 8;
+// const qreal POSITION_THRESHOLD = 0.1; // Adjusted for better small movement detection
+const qreal RELOCATION_THRESHOLD = 0.1; // Adjusted for better small movement detection
 
 AccelerometerSensor::AccelerometerSensor(QObject *parent)
     : QObject(parent),
@@ -112,15 +112,23 @@ void AccelerometerSensor::updateReading()
         //     velocityX = 0;
         // }
 
-        positionX += velocityX * deltaTime + 0.5 * currentX * deltaTime * deltaTime;
-        positionY += velocityY * deltaTime + 0.5 * currentY * deltaTime * deltaTime;
-        positionZ += velocityZ * deltaTime + 0.5 * currentZ * deltaTime * deltaTime;
+        // positionX += velocityX * deltaTime + 0.5 * currentX * deltaTime * deltaTime;
+        // positionY += velocityY * deltaTime + 0.5 * currentY * deltaTime * deltaTime;
+        // positionZ += velocityZ * deltaTime + 0.5 * currentZ * deltaTime * deltaTime;
 
-        velocityX += currentX * deltaTime;
-        velocityY += currentY * deltaTime;
-        velocityZ += currentZ * deltaTime;
+        // velocityX += currentX * deltaTime;
+        // velocityY += currentY * deltaTime;
+        // velocityZ += currentZ * deltaTime;
 
         if (zeroAccelCountTemp >= ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA){
+            positionX += velocityX * deltaTime + 0.5 * currentX * deltaTime * deltaTime;
+            positionY += velocityY * deltaTime + 0.5 * currentY * deltaTime * deltaTime;
+            positionZ += velocityZ * deltaTime + 0.5 * currentZ * deltaTime * deltaTime;
+
+            velocityX += currentX * deltaTime;
+            velocityY += currentY * deltaTime;
+            velocityZ += currentZ * deltaTime;
+
             QJsonObject segment;
             segment["start"] = QJsonObject({{"x", latestX}, {"y", latestY}});
             segment["end"] = QJsonObject({{"x", positionX}, {"y", positionY}});
@@ -139,6 +147,7 @@ void AccelerometerSensor::updateReading()
                 else
                     segment["direction"] = "left";
             }
+            segment["angle"] = 0;
 
             if (xMovement > RELOCATION_THRESHOLD || yMovement > RELOCATION_THRESHOLD) {
                 currentPathSegment = segment;
@@ -147,6 +156,7 @@ void AccelerometerSensor::updateReading()
                 latestX = positionX;
                 latestY = positionY;
                 qDebug() << "New movement added to the path.";
+                qDebug() << segment << "\n";
             }
         }
 
@@ -225,4 +235,9 @@ void AccelerometerSensor::saveDataToJson(const QString &filename) {
         qWarning("Couldn't open save file.");
     }
     qDebug() << "Current working directory:" << QDir::currentPath();
+}
+
+QJsonArray AccelerometerSensor::getPathArray()
+{
+    return pathArray;
 }

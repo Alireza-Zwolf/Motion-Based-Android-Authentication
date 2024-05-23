@@ -55,6 +55,9 @@ qt_add_qml_module(sensorsshowcase
         sensorsupport.h
         SOURCES accelerometersensor.h accelerometersensor.cpp
         SOURCES gyroscopesensor.h gyroscopesensor.cpp
+        SOURCES
+        SOURCES validator.h
+        SOURCES validator.h validator.cpp
 )
 
 target_link_libraries(sensorsshowcase

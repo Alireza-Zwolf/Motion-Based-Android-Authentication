@@ -24,6 +24,8 @@ public:
     Q_INVOKABLE void stopCapturing();
     void addRotationData(int degrees);
     Q_INVOKABLE void saveDataToJson(const QString &filename);
+    QJsonArray getPathArray();
+
 
 signals:
     void positionChanged(qreal x, qreal y, qreal z);
