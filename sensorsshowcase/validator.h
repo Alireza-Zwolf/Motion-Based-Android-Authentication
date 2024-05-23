@@ -16,7 +16,7 @@ public:
     explicit Validator(AccelerometerSensor *accelerometer, QObject *parent = nullptr);
 
     QJsonArray createCorrectSample();
-    QJsonObject createSegment(QJsonObject start, QJsonObject end, QString direction, QString angle);
+    QJsonObject createSegment(QJsonObject start, QJsonObject end, QString direction, qreal angle);
     bool comparePaths(const QJsonArray &capturedPath, const QJsonArray &correctPath, qreal threshold);
 
 signals:

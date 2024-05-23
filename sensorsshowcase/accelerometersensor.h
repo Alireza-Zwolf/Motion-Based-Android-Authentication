@@ -25,6 +25,7 @@ public:
     void addRotationData(int degrees);
     Q_INVOKABLE void saveDataToJson(const QString &filename);
     QJsonArray getPathArray();
+    void traverseAndCleanPathArray();
 
 
 signals:

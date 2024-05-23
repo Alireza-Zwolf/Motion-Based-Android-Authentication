@@ -206,11 +206,12 @@ void AccelerometerSensor::startCapturing() {
 
 void AccelerometerSensor::stopCapturing() {
     capturing = false;
+    traverseAndCleanPathArray();
 }
 
 void AccelerometerSensor::addRotationData(int degrees) {
     if (capturing) {
-        currentPathSegment["direction"] = degrees > 0 ? "right" : "left";
+        currentPathSegment["direction"] = degrees > 0 ? "left" : "right";
         currentPathSegment["angle"] = degrees;
         pathArray.append(currentPathSegment);
         qDebug() << "New rotation added to the path.";
@@ -240,4 +241,26 @@ void AccelerometerSensor::saveDataToJson(const QString &filename) {
 QJsonArray AccelerometerSensor::getPathArray()
 {
     return pathArray;
+}
+
+void AccelerometerSensor::traverseAndCleanPathArray()
+{
+    if (pathArray.size() < 3) {
+        return; // Not enough elements to compare
+    }
+
+    for (int i = 1; i < pathArray.size() - 1; ++i) {
+        QJsonObject prevSegment = pathArray[i - 1].toObject();
+        QJsonObject currentSegment = pathArray[i].toObject();
+        QJsonObject nextSegment = pathArray[i + 1].toObject();
+
+        int prevAngle = prevSegment["angle"].toInt();
+        int currentAngle = currentSegment["angle"].toInt();
+        int nextAngle = nextSegment["angle"].toInt();
+
+        if (prevAngle == nextAngle && prevAngle != 0) {
+            pathArray.removeAt(i);
+            --i; // Adjust index to account for removed element
+        }
+    }
 }
