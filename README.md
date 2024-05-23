@@ -19,20 +19,25 @@ The system is powered by useful UI which makes it easy to use . Each time a user
 
 
 ## Installation
-Step-by-step series of examples that tell you how to get a development environment running.
+For developing the sytem and also working with sensors , we used Qt framwork .Qt is a cross-platform application framework that allows us to develop graphical user interfaces and other software components.
 
+For Intallation the Qt on your system and preparing to use for this project , you can follow the steps below :
 
-git clone your-repo-url
-cd your-repo-directory
-npm install / pip install / other package managers
+1. Install the Qt framework from the [Qt website](https://www.qt.io/download).
+2. Install SDK and JDK : Ensure you have the compatible versions of SDK and JDK for your project. You can download them from their respective official websites.
+3. Configure SDK and JDK in QT :
+•  Open QT Creator and go to `Tools` > `Options`.
+
+•  Under `Kits`, select the appropriate kit for your project.
+
+•  Configure the paths to the SDK and JDK you installed earlier.
+4. Clone or download the project repository from GitHub.
+5. Open the Qt project file (`.pro`) in Qt Creator.
+6. Configure the project settings and build the project.
+7. Run the project.
+
 
 
 ## Usage
-Explain how to run the automated tests for this system. Include code examples.
-
-```python
-# Example of initializing sensors
-initialize_sensors()
-
-Contributing
-Instructions on how to contribute to your project.
+You can easily test and use the app . After downloading the application , you have to activate the developer options on your mobile phone and enable the usb debugging mode . 
+Then you should connect you mobile phone with the usb cable to your system and then run the application . 
