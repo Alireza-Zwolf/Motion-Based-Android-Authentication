@@ -9,6 +9,8 @@ The system is powered by useful UI which makes it easy to use . Each time a user
 
 
 ## Table of Contents
+•  Features
+
 •  [Installation](#installation)
 
 •  [Usage](#usage)
@@ -17,6 +19,8 @@ The system is powered by useful UI which makes it easy to use . Each time a user
 
 •  [License](#license)
 
+
+## Features
 
 ## Installation
 For developing the sytem and also working with sensors , we used Qt framwork .Qt is a cross-platform application framework that allows us to develop graphical user interfaces and other software components.
