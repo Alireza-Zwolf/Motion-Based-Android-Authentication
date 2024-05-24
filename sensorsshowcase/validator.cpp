@@ -2,10 +2,9 @@
 #include "accelerometersensor.h"
 #include <QJsonObject>
 #include <QDebug>
-#include <QtMath> // For qFabs and qSqrt
+#include <QtMath>
 
-const qreal DISTANCE_APPROXIMATION_THRESHOLD = 0.5; // Adjust this value as needed
-
+const qreal DISTANCE_APPROXIMATION_THRESHOLD = 0.5; 
 
 Validator::Validator(AccelerometerSensor *accelerometer, QObject *parent)
     : QObject(parent), accelerometerSensor(accelerometer)
@@ -16,8 +15,6 @@ QJsonArray Validator::createCorrectSample()
 {
     QJsonArray correctPath;
 
-    // QString right_agnel = -90;
-    // Create a manual sample of the correct path
     correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0}}), QJsonObject({{"x", 0}, {"y", 0.2}}), "up", 0));
     correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0.2}}), QJsonObject({{"x", 0}, {"y", 0.2}}), "right", -90));
     correctPath.append(createSegment(QJsonObject({{"x", 0}, {"y", 0.2}}), QJsonObject({{"x", 0}, {"y", 0.2}}), "right", -90));
@@ -46,9 +43,6 @@ bool Validator::comparePaths(const QJsonArray &capturedPath, const QJsonArray &c
         QJsonObject capturedSegment = capturedPath[i].toObject();
         QJsonObject correctSegment = correctPath[i].toObject();
 
-        // qDebug() << capturedSegment;
-        // qDebug() << correctSegment;
-        // Compare direction and angle
         if (capturedSegment["direction"].toString().compare(correctSegment["direction"].toString()) != 0) {
             qDebug() << "False1";
             return false;
@@ -59,7 +53,6 @@ bool Validator::comparePaths(const QJsonArray &capturedPath, const QJsonArray &c
             return false;
         }
 
-        // Compare start and end points based on direction
         QString direction = capturedSegment["direction"].toString();
         if ((direction == "left" || direction == "right") &&
             (!isWithinThreshold(capturedSegment["start"].toObject(), correctSegment["start"].toObject(), threshold, "x") ||
@@ -75,7 +68,6 @@ bool Validator::comparePaths(const QJsonArray &capturedPath, const QJsonArray &c
             return false;
         }
     }
-    // qDebug() << "Works Well!";
     return true;
 }
 
@@ -91,11 +83,7 @@ bool Validator::isWithinThreshold(const QJsonObject &point1, const QJsonObject &
 void Validator::validatePath()
 {
     QJsonArray capturedPath = accelerometerSensor->getPathArray();
-    // qDebug() << "validatePath function: capturedPath:";
-    // qDebug() << capturedPath;
     QJsonArray correctPath = createCorrectSample();
-    // qDebug() << "validatePath function: correctPath:";
-    // qDebug() << correctPath;
     bool result = comparePaths(capturedPath, correctPath, DISTANCE_APPROXIMATION_THRESHOLD);
     qDebug() << result;
     emit validationResult(result);

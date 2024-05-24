@@ -161,8 +161,6 @@ void GyroscopeSensor::startCalibration()
     calibrationYValues.clear();
     calibrationZValues.clear();
     qDebug() << "Gyroscope calibration started.";
-
-    // Create a QTimer to wait for 5 seconds and then print "Test"
     QTimer::singleShot(5000, [this]() {
         stopCalibration();
     });

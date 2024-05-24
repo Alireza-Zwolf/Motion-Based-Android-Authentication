@@ -9,11 +9,11 @@
 #include <QDir>
 #include <algorithm>
 
-const qreal DEFAULT_THRESHOLD = 0.4;  // Adjusted threshold for better sensitivity
-const int DEFAULT_WINDOW_SIZE = 3;    // Adjusted window size for better smoothing
-const int ZERO_ACCEL_COUNT_LIMIT = 2; // Increased limit for better accuracy in zero detection
+const qreal DEFAULT_THRESHOLD = 0.4; 
+const int DEFAULT_WINDOW_SIZE = 3; 
+const int ZERO_ACCEL_COUNT_LIMIT = 2; 
 const int ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA = 5;
-const qreal RELOCATION_THRESHOLD = 0.1; // Adjusted for better small movement detection
+const qreal RELOCATION_THRESHOLD = 0.1; 
 
 AccelerometerSensor::AccelerometerSensor(QObject *parent)
     : QObject(parent),
@@ -67,7 +67,7 @@ void AccelerometerSensor::updateReading()
         }
 
         qint64 currentTime = lastUpdateTime.elapsed();
-        qreal deltaTime = currentTime / 1000.0; // Convert ms to s
+        qreal deltaTime = currentTime / 1000.0; 
         lastUpdateTime.restart();
 
         applyDenoising();
@@ -168,10 +168,9 @@ void AccelerometerSensor::applyDenoising()
 
 void AccelerometerSensor::startCapturing() {
     capturing = true;
-    pathArray = QJsonArray();  // Initialize the JSON array
-    currentPathSegment = QJsonObject(); // Initialize current path segment
+    pathArray = QJsonArray(); 
+    currentPathSegment = QJsonObject();
 
-    // Setting the X Y Z position to 0, 0, 0
     positionX = 0;
     positionY = 0;
     positionZ = 0;
@@ -252,7 +251,6 @@ void AccelerometerSensor::startCalibration()
     calibrationZValues.clear();
     qDebug() << "Accelerometer calibration started.";
 
-    // Create a QTimer to wait for 5 seconds and then print "Test"
     QTimer::singleShot(5000, [this]() {
         stopCalibration();
     });
