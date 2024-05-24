@@ -160,7 +160,12 @@ void GyroscopeSensor::startCalibration()
     calibrationXValues.clear();
     calibrationYValues.clear();
     calibrationZValues.clear();
-    qDebug() << "Calibration started.";
+    qDebug() << "Gyroscope calibration started.";
+
+    // Create a QTimer to wait for 5 seconds and then print "Test"
+    QTimer::singleShot(5000, [this]() {
+        stopCalibration();
+    });
 }
 
 void GyroscopeSensor::stopCalibration()
@@ -169,7 +174,7 @@ void GyroscopeSensor::stopCalibration()
         calculateMedianCalibration();
         isCalibrating = false;
         isCalibrated = true;
-        qDebug() << "Calibration stopped and median values calculated.";
+        qDebug() << "Gyroscope calibration done and median values calculated.";
     } else {
         qDebug() << "Calibration was not running.";
     }

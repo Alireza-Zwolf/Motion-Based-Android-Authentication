@@ -9,11 +9,11 @@
 #include <QDir>
 #include <algorithm>
 
-const qreal DEFAULT_THRESHOLD = 0.3;  // Adjusted threshold for better sensitivity
+const qreal DEFAULT_THRESHOLD = 0.4;  // Adjusted threshold for better sensitivity
 const int DEFAULT_WINDOW_SIZE = 3;    // Adjusted window size for better smoothing
 const int ZERO_ACCEL_COUNT_LIMIT = 2; // Increased limit for better accuracy in zero detection
-const int ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA = 3;
-const qreal RELOCATION_THRESHOLD = 0.2; // Adjusted for better small movement detection
+const int ZERO_ACCEL_COUNT_LIMIT_FOR_SAVING_DATA = 5;
+const qreal RELOCATION_THRESHOLD = 0.1; // Adjusted for better small movement detection
 
 AccelerometerSensor::AccelerometerSensor(QObject *parent)
     : QObject(parent),
@@ -170,7 +170,14 @@ void AccelerometerSensor::startCapturing() {
     capturing = true;
     pathArray = QJsonArray();  // Initialize the JSON array
     currentPathSegment = QJsonObject(); // Initialize current path segment
+
+    // Setting the X Y Z position to 0, 0, 0
+    positionX = 0;
+    positionY = 0;
+    positionZ = 0;
+
     lastUpdateTime.start();
+    qDebug() << "Capturing Movement Has Started!";
 }
 
 void AccelerometerSensor::stopCapturing() {
@@ -243,7 +250,13 @@ void AccelerometerSensor::startCalibration()
     calibrationXValues.clear();
     calibrationYValues.clear();
     calibrationZValues.clear();
-    qDebug() << "Calibration started.";
+    qDebug() << "Accelerometer calibration started.";
+
+    // Create a QTimer to wait for 5 seconds and then print "Test"
+    QTimer::singleShot(5000, [this]() {
+        stopCalibration();
+    });
+
 }
 
 void AccelerometerSensor::stopCalibration()
@@ -255,7 +268,7 @@ void AccelerometerSensor::stopCalibration()
         }
         isCalibrating = false;
         isCalibrated = true;
-        qDebug() << "Calibration stopped and median values calculated.";
+        qDebug() << "Accelerometer calibration stopped and median values calculated.";
     } else {
         qDebug() << "Calibration was not running.";
     }
@@ -273,6 +286,7 @@ void AccelerometerSensor::calculateMedianCalibration()
     std::sort(calibrationZValues.begin(), calibrationZValues.end());
 
     int midIndex = calibrationXValues.size() / 2;
+    qDebug() << midIndex;
 
     initialX = calibrationXValues[midIndex];
     initialY = calibrationYValues[midIndex];

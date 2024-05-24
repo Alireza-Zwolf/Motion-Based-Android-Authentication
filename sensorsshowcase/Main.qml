@@ -21,7 +21,7 @@ ApplicationWindow {
 
             component CustomButton: Button {
                 highlighted: true
-                font.pixelSize: 16
+                font.pixelSize: root.defaultFontSize
                 font.letterSpacing: 1.5
 
                 Layout.alignment: Qt.AlignCenter
@@ -29,29 +29,14 @@ ApplicationWindow {
                 Layout.fillWidth: true
             }
 
-            RowLayout {
-                spacing: 20
-
-                CustomButton {
-                    text: "Start Calibration"
-                    width: 200
-                    height: 50
-                    enabled: !accelerometerSensor.capturing && !gyroscopeSensor.capturing
-                    onClicked: {
-                        accelerometerSensor.startCalibration()
-                        gyroscopeSensor.startCalibration()
-                    }
-                }
-
-                CustomButton {
-                    text: "Stop Calibration"
-                    width: 200
-                    height: 50
-                    enabled: !accelerometerSensor.capturing && !gyroscopeSensor.capturing
-                    onClicked: {
-                        accelerometerSensor.stopCalibration()
-                        gyroscopeSensor.stopCalibration()
-                    }
+            CustomButton {
+                text: "Start Calibration"
+                width: 200
+                height: 50
+                enabled: !accelerometerSensor.capturing && !gyroscopeSensor.capturing
+                onClicked: {
+                    accelerometerSensor.startCalibration()
+                    gyroscopeSensor.startCalibration()
                 }
             }
 
@@ -98,38 +83,66 @@ ApplicationWindow {
 
             Canvas {
                 id: graphCanvas
-                width: 400
-                height: 400
-                anchors.horizontalCenter: parent.horizontalCenter
-                anchors.verticalCenter: parent.verticalCenter
+                width: 300
+                height: 300
                 onPaint: {
                     var ctx = getContext("2d");
                     ctx.clearRect(0, 0, width, height);
 
-                    // Draw axes
+                    // Draw box axes
                     ctx.strokeStyle = "black";
                     ctx.lineWidth = 1;
                     ctx.beginPath();
-                    ctx.moveTo(40, 0);
-                    ctx.lineTo(40, height);
-                    ctx.lineTo(width, height);
+                    ctx.moveTo(30, 30); // Start point
+                    ctx.lineTo(width - 30, 30); // Top line
+                    ctx.lineTo(width - 30, height - 30); // Right line
+                    ctx.lineTo(30, height - 30); // Bottom line
+                    ctx.lineTo(30, 30); // Left line
                     ctx.stroke();
 
+                    // Function to draw arrowheads
+                    function drawArrowhead(ctx, fromX, fromY, toX, toY) {
+                        var headlen = 10; // length of head in pixels
+                        var angle = Math.atan2(toY - fromY, toX - fromX);
+                        ctx.beginPath();
+                        ctx.moveTo(toX, toY);
+                        ctx.lineTo(toX - headlen * Math.cos(angle - Math.PI / 6), toY - headlen * Math.sin(angle - Math.PI / 6));
+                        ctx.moveTo(toX, toY);
+                        ctx.lineTo(toX - headlen * Math.cos(angle + Math.PI / 6), toY - headlen * Math.sin(angle + Math.PI / 6));
+                        ctx.stroke();
+                    }
+
                     // Draw path data
-                    ctx.strokeStyle = "red";
+                    ctx.strokeStyle = "blue";
                     ctx.lineWidth = 5;
                     ctx.beginPath();
 
                     if (pathData.length > 0) {
-                        ctx.moveTo(40 + pathData[0].start.x * 100 , height - 40 - pathData[0].start.y * 100);
+                        ctx.moveTo(40 + pathData[0].start.x * 1000, height - 40 - pathData[0].start.y * 1000);
                         for (var i = 0; i < pathData.length; i++) {
                             var segment = pathData[i];
-                            ctx.lineTo(40 + segment.end.x * 100 , height - 40 - segment.end.y * 100);
+                            if(segment.angle === 0){
+                                var startX = 40 + segment.start.x * 1000;
+                                var startY = height - 40 - segment.start.y * 1000;
+                                var endX = 40 + segment.end.x * 1000;
+                                var endY = height - 40 - segment.end.y * 1000;
+                                ctx.lineTo(endX, endY);
+                                ctx.stroke();
+                                drawArrowhead(ctx, startX, startY, endX, endY);
+                                ctx.beginPath();
+                                ctx.moveTo(endX, endY);
+                            }
                         }
                     }
-                    ctx.stroke();
                 }
             }
+        }
+
+        Timer {
+            id: resetColorTimer
+            interval: 3000
+            repeat: false
+            onTriggered: background.color = "white"
         }
     }
 
@@ -138,7 +151,7 @@ ApplicationWindow {
         onValidationResult: {
             validationResult.text = result ? "Path is correct" : "Path is incorrect"
             background.color = result ? "green" : "red"
-            Qt.createQmlObject('import QtQuick 2.0; Timer { interval: 3000; repeat: false; onTriggered: background.color = "white" }', background, "colorResetTimer")
+            resetColorTimer.start()
         }
     }
 
@@ -150,6 +163,7 @@ ApplicationWindow {
     property var pathData: []
 
     Component.onCompleted: {
+
         processPathArray(accelerometerSensor.getPathArray());
     }
 }
